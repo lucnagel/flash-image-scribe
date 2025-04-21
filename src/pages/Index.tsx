@@ -1,9 +1,11 @@
-
 import React from "react";
 import ImageUploader from "@/components/ImageUploader";
 import ResultTable from "@/components/ResultTable";
 import { analyzeImage } from "@/lib/gemini";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
+import { exportMetadataAsJson } from "@/lib/exportUtils";
 
 type BatchResult = {
   fileId: string;
@@ -25,7 +27,6 @@ const Index = () => {
   const [results, setResults] = React.useState<BatchResult[]>([]);
   const [loading, setLoading] = React.useState(false);
 
-  // Helper: convert a File to a DataURL
   const fileToDataUrl = (file: File): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -34,11 +35,9 @@ const Index = () => {
     });
   };
 
-  // When user selects files
   const onFilesSelected = async (files: File[]) => {
     setLoading(true);
 
-    // Load thumbnails for all files
     const dataUrls = await Promise.all(files.map((f) => fileToDataUrl(f)));
 
     setResults(
@@ -50,7 +49,7 @@ const Index = () => {
         status: "analyzing" as const,
       }))
     );
-    // Process images in parallel, but show metadata as they complete
+
     await Promise.all(
       files.map(async (file, idx) => {
         try {
@@ -82,6 +81,19 @@ const Index = () => {
             Upload images to automatically extract digital archive metadata.<br />
             Each file will be analyzed and displayed below.
           </p>
+          {results.length > 0 && (
+            <Button
+              onClick={() => {
+                exportMetadataAsJson(results);
+                toast.success("Metadata exported successfully!");
+              }}
+              variant="outline"
+              className="mt-2 bg-[#2A2A2E] text-gray-200 border-[#403E43] hover:bg-[#403E43] hover:text-white"
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              Export Metadata
+            </Button>
+          )}
         </header>
         <main className="flex flex-col gap-8 flex-1 px-2 pb-8">
           <ImageUploader onFilesSelected={onFilesSelected} loading={loading} />
