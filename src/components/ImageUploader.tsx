@@ -17,14 +17,21 @@ const ImageUploader: React.FC<Props> = ({ onFilesSelected, loading }) => {
       (f) => f.type.startsWith("image/")
     );
     onFilesSelected(files);
-    // Reset input so re-uploading same file works
     e.target.value = "";
   };
 
   return (
-    <div className={cn("rounded-lg border border-muted bg-white shadow-sm p-6 flex flex-col items-center gap-4", loading && "opacity-70 pointer-events-none")}>
-      <ImageIcon className="w-10 h-10 text-blue-500 mb-2" />
-      <p className="font-medium text-lg text-gray-800">Batch Analyze Images</p>
+    <div
+      className={cn(
+        "mx-auto max-w-xl w-full bg-[#2A2A2E] border border-[#403E43] rounded-xl shadow-md flex flex-col items-center gap-3 py-12 px-6",
+        loading && "opacity-60 pointer-events-none"
+      )}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <ImageIcon className="w-9 h-9 text-gray-300" />
+        <span className="font-bold text-xl text-gray-100">Batch Analyze Images</span>
+      </div>
+      <p className="text-gray-400 text-sm">Select multiple images to extract archival metadata.</p>
       <input
         type="file"
         accept="image/*"
@@ -38,9 +45,9 @@ const ImageUploader: React.FC<Props> = ({ onFilesSelected, loading }) => {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={loading}
-        className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white mt-2 shadow transition"
+        className="px-5 py-2 rounded-md font-semibold bg-[#403E43] hover:bg-[#221F26] text-white mt-3 shadow transition-all"
       >
-        {loading ? "Analyzing..." : "Select images"}
+        {loading ? "Analyzing..." : "Select Images"}
       </button>
     </div>
   );
