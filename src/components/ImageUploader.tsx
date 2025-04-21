@@ -84,7 +84,7 @@ const ImageUploader: React.FC<Props> = ({ onFilesSelected, loading }) => {
           "bg-muted/30 hover:bg-muted/40",
           "flex flex-col items-center justify-center gap-4 py-10 px-4",
           dragActive ? "border-gray-400 bg-gray-800/5" : "border-muted",
-          loading && "opacity-60 pointer-events-none"
+          loading && "opacity-50 pointer-events-none"
         )}
       >
         <div
