@@ -1,7 +1,7 @@
 
 /**
  * Utility to send an image to Gemini Flash for metadata extraction.
- * Uses Gemini Pro Vision API.
+ * Uses Gemini 1.5 Flash API.
  */
 type MetadataResponse = {
   subject: string;
@@ -14,8 +14,8 @@ type MetadataResponse = {
 };
 
 const GEMINI_API_KEY = "AIzaSyBBStBdtFIqw5fWGcChsCuwWEOI-qR-J2M";
-// Updated API endpoint to use the correct URL format
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=" + GEMINI_API_KEY;
+// Updated API endpoint to use gemini-1.5-flash model which is the current version
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY;
 
 /**
  * Analyze one image file using Gemini Flash and return metadata.
