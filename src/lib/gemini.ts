@@ -1,7 +1,7 @@
 
 /**
  * Utility to send an image to Gemini Flash for metadata extraction.
- * Uses Gemini Pro Vision (Flash) API.
+ * Uses Gemini Pro Vision API.
  */
 type MetadataResponse = {
   subject: string;
@@ -14,7 +14,8 @@ type MetadataResponse = {
 };
 
 const GEMINI_API_KEY = "AIzaSyBBStBdtFIqw5fWGcChsCuwWEOI-qR-J2M";
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=" + GEMINI_API_KEY;
+// Updated API endpoint to use the correct URL format
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=" + GEMINI_API_KEY;
 
 /**
  * Analyze one image file using Gemini Flash and return metadata.
@@ -59,24 +60,46 @@ Give no explanation or commentary, ONLY valid compact JSON.
           }
         ]
       }
-    ]
+    ],
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 1024
+    }
   };
+  
+  console.log("Sending request to Gemini API...");
+  
   // Call Gemini Flash for vision
-  const res = await fetch(GEMINI_URL, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  // Extract JSON object from Gemini's text reply
   try {
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const jsonText = text.match(/\{[\s\S]*\}/)?.[0]; // Find first {...}
-    if (!jsonText) return null;
-    // Remove any trailing commas, just in case
-    const clean = jsonText.replace(/,\s*\}/g, "}").replace(/,\s*\]/g, "]");
-    return JSON.parse(clean) as MetadataResponse;
-  } catch {
+    const res = await fetch(GEMINI_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+    
+    if (!res.ok) {
+      console.error("Gemini API error:", res.status, await res.text());
+      throw new Error(`Gemini API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    console.log("Gemini API response:", data);
+    
+    // Extract JSON object from Gemini's text reply
+    try {
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      console.log("Raw text from Gemini:", text);
+      const jsonText = text.match(/\{[\s\S]*\}/)?.[0]; // Find first {...}
+      if (!jsonText) return null;
+      // Remove any trailing commas, just in case
+      const clean = jsonText.replace(/,\s*\}/g, "}").replace(/,\s*\]/g, "]");
+      return JSON.parse(clean) as MetadataResponse;
+    } catch (e) {
+      console.error("Error parsing Gemini response:", e);
+      return null;
+    }
+  } catch (e) {
+    console.error("Error calling Gemini API:", e);
     return null;
   }
 }
