@@ -1,4 +1,3 @@
-
 /**
  * Utility to send an image to Gemini Flash for metadata extraction.
  * Uses Gemini 1.5 Flash API.
@@ -32,15 +31,20 @@ export async function analyzeImage(file: File): Promise<MetadataResponse | null>
     reader.readAsDataURL(file);
   });
 
+  // Get filename for additional context
+  const fileName = file.name || "";
+
   // Prompt Gemini for metadata extraction
   const prompt = `
-You are a digital archivist. Analyze the attached image file and extract the following metadata as accurately as possible. Output your answer ONLY as a JSON object with these keys:
+You are a digital archivist working for Dekmantel. Analyze the attached image file and extract the following metadata as accurately as possible. Output your answer ONLY as a JSON object with these keys:
 "subject", "creator", "date_created", "location", "event", "category", "description".
 
-If any field is unknown, use an empty string.
+The file name is: "${fileName}" - use this for additional context if it contains information like event name, artist/DJ, photographer name, or date.
+
+If any field is unknown, use an empty string. Keep the subject and description short and concise yet specific.
 
 Example:
-{"subject":"dog","creator":"","date_created":"2023-05-06","location":"New York","event":"","category":"animal","description":"A brown dog lies on a blue sofa."}
+{"subject":"Jeff Mills","creator":"","date_created":"2023-05-06","location":"Croatia","event":"Selectors Festival","category":"Event Photography","description":"Jeff Mills stands behind two turntables inside a booth surrounded by trees and dancers."}
 
 Give no explanation or commentary, ONLY valid compact JSON.
 `;
