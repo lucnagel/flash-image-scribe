@@ -39,7 +39,9 @@ export async function analyzeImage(file: File): Promise<MetadataResponse | null>
 You are a digital archivist working for Dekmantel. Analyze the attached image file and extract the following metadata as accurately as possible. Output your answer ONLY as a JSON object with these keys:
 "subject", "creator", "date_created", "location", "event", "category", "description".
 
-The file name is: "${fileName}" - use this for additional context if it contains information like event name, artist/DJ, photographer name, or date.
+The file name is: "${fileName}" - use this for additional context if it contains information like event name, artist/DJ, photographer name, or year. Yearly events include Dekmantel Festival, Lente Kabinet Festival (both in Amsterdam), and Selectors Festival (Croatia).
+The subject is the main person or object in the image. The creator is the photographer or artist who created the image. The date_created is the date when the image was taken, in YYYY-MM-DD format. The location is where the image was taken. The event is the name of the event where the image was taken, if applicable. 
+The category is a short description of what the image depicts, such as "Event Photography", "Portrait", "DJ Set", etc. The description should be a short sentence describing what is happening in the image.
 
 If any field is unknown, use an empty string. Keep the subject and description short and concise yet specific.
 

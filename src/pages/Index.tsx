@@ -28,6 +28,8 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [totalFiles, setTotalFiles] = useState(0);
   const [completedFiles, setCompletedFiles] = useState(0);
+  const [analysisStart, setAnalysisStart] = useState<number | null>(null);
+  const [analysisEnd, setAnalysisEnd] = useState<number | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   const fileToDataUrl = (file: File): Promise<string> => {
@@ -44,6 +46,8 @@ const Index = () => {
     setLoading(true);
     setTotalFiles(files.length);
     setCompletedFiles(0);
+    setAnalysisStart(Date.now());
+    setAnalysisEnd(null);
 
     const dataUrls = await Promise.all(files.map((f) => fileToDataUrl(f)));
 
@@ -81,6 +85,7 @@ const Index = () => {
     );
 
     setLoading(false);
+    setAnalysisEnd(Date.now());
     toast.success("Batch analysis complete!");
   };
 
@@ -238,6 +243,11 @@ const Index = () => {
                 {!loading && (
                   <p className="text-sm text-muted-foreground">
                     {results.length} image{results.length !== 1 ? 's' : ''} processed. 
+                    {analysisStart && analysisEnd && (
+                      <span className="ml-2 text-green-600 font-semibold">
+                        (Completed in {((analysisEnd - analysisStart) / 1000).toFixed(2)}s)
+                      </span>
+                    )}
                     Click to analyze more images.
                   </p>
                 )}
