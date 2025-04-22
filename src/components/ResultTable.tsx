@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Image as ImageIcon, Check, X, Loader, ChevronDown, ChevronUp, Edit, Save, Square, CheckSquare } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Image as ImageIcon, Check, X, Loader, Edit, Save, Square, CheckSquare } from "lucide-react";
+import { cn, generateFilename } from "@/lib/utils";
 
 type Result = {
   fileId: string;
@@ -8,12 +8,17 @@ type Result = {
   fileDataUrl: string | null;
   metadata: {
     subject: string;
-    creator: string;
+    author: string;
     date_created: string;
     location: string;
     event: string;
     category: string;
     description: string;
+    tags: string; // Comma-separated tags
+    original_filename?: string;
+    keep_original_filename?: boolean;
+    filename_pattern?: string;
+    use_ai_analysis?: boolean;
   } | null;
   status: "analyzing" | "done" | "failed";
 };
@@ -32,22 +37,34 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
   const [editValues, setEditValues] = useState<Record<string, Result['metadata']>>({});
   const [batchEditValues, setBatchEditValues] = useState<Partial<Result['metadata']>>({
     subject: "",
-    creator: "",
+    author: "",
     date_created: "",
     location: "",
     event: "",
     category: "",
-    description: ""
+    description: "",
+    tags: "",
+    use_ai_analysis: true
   });
   const [batchFieldsToUpdate, setBatchFieldsToUpdate] = useState<Record<string, boolean>>({
     subject: false,
-    creator: false,
+    author: false,
     date_created: false,
     location: false,
     event: false,
     category: false,
-    description: false
+    description: false,
+    tags: false,
+    use_ai_analysis: false
   });
+  
+  // Function to generate filename preview based on metadata
+  const getGeneratedFilename = (metadata: Result['metadata']) => {
+    if (!metadata) return "file.jpg";
+    
+    const pattern = metadata.filename_pattern || "{subject}_{event}";
+    return generateFilename(pattern, metadata) + ".jpg";
+  };
 
   if (!results.length) return null;
 
@@ -106,21 +123,25 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
     setBatchEditing(false);
     setBatchEditValues({
       subject: "",
-      creator: "",
+      author: "",
       date_created: "",
       location: "",
       event: "",
       category: "",
-      description: ""
+      description: "",
+      tags: "",
+      use_ai_analysis: true
     });
     setBatchFieldsToUpdate({
       subject: false,
-      creator: false,
+      author: false,
       date_created: false,
       location: false,
       event: false,
       category: false,
-      description: false
+      description: false,
+      tags: false,
+      use_ai_analysis: false
     });
   };
 
@@ -135,6 +156,13 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
   };
 
   const handleBatchEditChange = (field: keyof Result['metadata'], value: string) => {
+    setBatchEditValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  const handleBatchEditBooleanChange = (field: keyof Result['metadata'], value: boolean) => {
     setBatchEditValues(prev => ({
       ...prev,
       [field]: value
@@ -172,7 +200,13 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
       // Only update fields that are checked
       Object.entries(batchFieldsToUpdate).forEach(([field, shouldUpdate]) => {
         if (shouldUpdate && batchEditValues[field as keyof Result['metadata']] !== undefined) {
-          updatedMetadata[field as keyof Result['metadata']] = batchEditValues[field as keyof Result['metadata']] as string;
+          const key = field as keyof Result['metadata'];
+          // Safe type assertion based on field type
+          if (key === 'use_ai_analysis') {
+            (updatedMetadata as any)[key] = batchEditValues[key];
+          } else {
+            (updatedMetadata as any)[key] = batchEditValues[key];
+          }
         }
       });
 
@@ -192,8 +226,27 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
   const allSelected = selectedCount === completedResults.length && completedResults.length > 0;
 
   return (
-    <div className="w-full animate-in">
-      {/* Batch edit controls */}
+    <div className="animate-in container-fluid">
+      {/* Header with actions */}
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+        <h2 className="text-xl font-bold text-foreground">
+          Results 
+          {results.length > 0 && <span className="text-sm font-normal text-muted-foreground ml-2">({results.length} items)</span>}
+        </h2>
+        
+        <div className="flex items-center space-x-3">
+          {selectedCount > 0 && !batchEditing && (
+            <button
+              onClick={startBatchEdit}
+              className="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
+            >
+              Edit {selectedCount} selected
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Batch selection info banner */}
       {selectedCount > 0 && !batchEditing && (
         <div className="mb-4 p-3 bg-muted rounded-lg flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
           <div className="flex items-center gap-2">
@@ -216,7 +269,7 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
       {/* Batch edit form */}
       {batchEditing && (
-        <div className="mb-4 p-4 border border-border rounded-lg bg-card shadow-sm animate-in fade-in">
+        <div className="mb-6 p-4 border border-border rounded-lg bg-card shadow-sm animate-in fade-in">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Batch Edit {selectedCount} item{selectedCount !== 1 ? 's' : ''}</h3>
             <div className="text-sm text-muted-foreground">
@@ -224,7 +277,7 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 mb-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input 
@@ -250,20 +303,20 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
               <div className="flex items-center gap-2">
                 <input 
                   type="checkbox" 
-                  id="batch-creator" 
-                  checked={batchFieldsToUpdate.creator} 
-                  onChange={() => toggleBatchField('creator')}
+                  id="batch-author" 
+                  checked={batchFieldsToUpdate.author} 
+                  onChange={() => toggleBatchField('author')}
                   className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                 />
-                <label htmlFor="batch-creator" className="text-sm font-medium">Creator</label>
+                <label htmlFor="batch-author" className="text-sm font-medium">author</label>
               </div>
               <input
                 type="text"
-                disabled={!batchFieldsToUpdate.creator}
+                disabled={!batchFieldsToUpdate.author}
                 className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
-                value={batchEditValues.creator}
-                onChange={(e) => handleBatchEditChange('creator', e.target.value)}
-                placeholder="Creator"
+                value={batchEditValues.author}
+                onChange={(e) => handleBatchEditChange('author', e.target.value)}
+                placeholder="author"
               />
             </div>
 
@@ -350,6 +403,27 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                 placeholder="Category"
               />
             </div>
+            
+            <div className="space-y-2 sm:col-span-2">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="batch-tags" 
+                  checked={batchFieldsToUpdate.tags} 
+                  onChange={() => toggleBatchField('tags')}
+                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <label htmlFor="batch-tags" className="text-sm font-medium">Tags</label>
+              </div>
+              <input
+                type="text"
+                disabled={!batchFieldsToUpdate.tags}
+                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
+                value={batchEditValues.tags}
+                onChange={(e) => handleBatchEditChange('tags', e.target.value)}
+                placeholder="Comma-separated tags"
+              />
+            </div>
           </div>
 
           <div className="space-y-2 mb-6">
@@ -372,6 +446,46 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
             />
           </div>
 
+          {/* AI Analysis toggle */}
+          <div className="border-t border-border pt-4 mb-6">
+            <h4 className="text-sm font-medium mb-3">AI Analysis</h4>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="batch-use-ai-analysis" 
+                  checked={batchFieldsToUpdate.use_ai_analysis}
+                  onChange={() => toggleBatchField('use_ai_analysis')}
+                  className="mr-2 h-4 w-4"
+                />
+                <label htmlFor="batch-use-ai-analysis" className="text-sm">
+                  Use AI Analysis
+                </label>
+              </div>
+              
+              {batchFieldsToUpdate.use_ai_analysis && (
+                <div className="pl-6">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="batch-ai-enabled"
+                      checked={batchEditValues.use_ai_analysis === true}
+                      onChange={(e) => handleBatchEditBooleanChange('use_ai_analysis', e.target.checked)}
+                      className="mr-2 h-4 w-4"
+                    />
+                    <label htmlFor="batch-ai-enabled" className="text-sm">
+                      Enable AI analysis for selected images
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    AI will analyze images and extract subject, description, and tags.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end gap-3">
             <button
               onClick={cancelBatchEdit}
@@ -390,12 +504,12 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
         </div>
       )}
 
-      {/* Desktop view - traditional table with description column */}
-      <div className="hidden lg:block w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
+      {/* Table view - now the only view option */}
+      <div className="table-container">
+        <div className="table-responsive">
           <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-muted/80 backdrop-blur-sm backdrop-filter border-b border-border">
                 <th className="w-10 px-4 py-3">
                   <div 
                     className="cursor-pointer flex items-center justify-center"
@@ -411,10 +525,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Image</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">File</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Subject</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Creator</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">author</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Date</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Location</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left w-1/4">Description</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Tags</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left w-1/4 xl:w-1/3 2xl:w-1/4 3xl:w-1/5">Description</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Status</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Actions</th>
               </tr>
@@ -459,11 +574,13 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foreground truncate max-w-[180px]">
-                        {fileName}
+                        {metadata?.original_filename || fileName}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {fileName.split('.').pop()?.toUpperCase()}
-                      </span>
+                      {metadata && metadata.subject && (
+                        <span className="text-xs text-blue-600 truncate max-w-[180px] mt-0.5">
+                          → {getGeneratedFilename(metadata)}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">
@@ -487,10 +604,10 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                       <input
                         type="text"
                         className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        value={editValues[fileId]?.creator || ""}
-                        onChange={(e) => handleEditChange(fileId, 'creator', e.target.value)}
+                        value={editValues[fileId]?.author || ""}
+                        onChange={(e) => handleEditChange(fileId, 'author', e.target.value)}
                       />
-                    ) : metadata?.creator || (
+                    ) : metadata?.author || (
                       status === "analyzing" ? (
                         <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
                       ) : (
@@ -530,6 +647,30 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                       )
                     )}
                   </td>
+                  <td className="px-4 py-3 text-sm">
+                    {editingRow === fileId ? (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                        value={editValues[fileId]?.tags || ""}
+                        onChange={(e) => handleEditChange(fileId, 'tags', e.target.value)}
+                      />
+                    ) : metadata?.tags ? (
+                      <div className="flex flex-wrap gap-1">
+                        {metadata.tags.split(',').map((tag, i) => (
+                          tag.trim() && (
+                            <span key={i} className="px-1.5 py-0.5 bg-accent/20 text-xs rounded">
+                              {tag.trim()}
+                            </span>
+                          )
+                        ))}
+                      </div>
+                    ) : status === "analyzing" ? (
+                      <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
+                    ) : (
+                      <span className="text-muted-foreground italic">N/A</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm max-w-xs">
                     {editingRow === fileId ? (
                       <textarea
@@ -539,7 +680,7 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                         rows={2}
                       />
                     ) : metadata?.description ? (
-                      <div className="line-clamp-2 text-sm font-medium" title={metadata.description}>
+                      <div className="line-clamp-3 text-sm font-medium" title={metadata.description}>
                         {metadata.description}
                       </div>
                     ) : status === "analyzing" ? (
@@ -601,241 +742,19 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
           </table>
         </div>
       </div>
-
-      {/* Mobile/Tablet view - card-based layout with prominent description */}
-      <div className="lg:hidden space-y-3">
-        {results.map(({ fileId, fileName, fileDataUrl, metadata, status }) => (
-          <div 
-            key={fileId}
-            className={cn(
-              "border border-border rounded-lg overflow-hidden bg-card shadow-sm transition-all",
-              expandedRows[fileId] ? "card-hover" : "",
-              status === "analyzing" && "bg-secondary/5",
-              selectedRows[fileId] && "bg-green-50/5"
-            )}
-          >
-            <div className="flex items-center gap-3 p-3">
-              {status === "done" && (
-                <div 
-                  className="cursor-pointer"
-                  onClick={(e) => toggleSelect(fileId, e)}
-                >
-                  {selectedRows[fileId] ? (
-                    <CheckSquare className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <Square className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </div>
-              )}
-              
-              <div 
-                className="flex-1 flex items-center gap-3 cursor-pointer"
-                onClick={() => toggleRow(fileId)}
-              >
-                <div className="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted/30 border border-muted flex items-center justify-center">
-                  {fileDataUrl ? (
-                    <img src={fileDataUrl} alt={fileName} className="w-full h-full object-cover" />
-                  ) : (
-                    <ImageIcon className="w-5 h-5 text-muted-foreground/60" />
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{fileName}</p>
-                    {status === "done" ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                        <Check className="w-3 h-3" />
-                      </span>
-                    ) : status === "analyzing" ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400">
-                        <Loader className="w-3 h-3 animate-spin" />
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
-                        <X className="w-3 h-3" />
-                      </span>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    {status === "done" 
-                      ? `${metadata?.subject || 'Untitled'} • ${metadata?.creator || 'Unknown'}`
-                      : status === "analyzing" 
-                        ? "Analyzing metadata..."
-                        : "Analysis failed"
-                    }
-                  </p>
-
-                  {/* Preview description even when collapsed */}
-                  {status === "done" && metadata?.description && (
-                    <p className="text-xs mt-1 line-clamp-1 text-foreground/80 italic">
-                      "{metadata.description}"
-                    </p>
-                  )}
-                </div>
-                
-                {expandedRows[fileId] ? (
-                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                )}
-              </div>
-              
-              {/* Edit button for mobile */}
-              {status === "done" && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (editingRow === fileId) {
-                      saveEdit(fileId, e);
-                    } else {
-                      startEdit(fileId, e);
-                    }
-                  }}
-                  className="p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors"
-                  title={editingRow === fileId ? "Save" : "Edit metadata"}
-                >
-                  {editingRow === fileId ? (
-                    <Save className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <Edit className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-              )}
-            </div>
-            
-            {/* Expandable content with prominent description */}
-            {expandedRows[fileId] && (
-              <div className="border-t border-border px-3 py-3 bg-muted/10 animate-slide-down">
-                {editingRow === fileId ? (
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Description</label>
-                      <textarea
-                        className="w-full px-3 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                        value={editValues[fileId]?.description || ""}
-                        onChange={(e) => handleEditChange(fileId, 'description', e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Subject</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.subject || ""}
-                          onChange={(e) => handleEditChange(fileId, 'subject', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Creator</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.creator || ""}
-                          onChange={(e) => handleEditChange(fileId, 'creator', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Date</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.date_created || ""}
-                          onChange={(e) => handleEditChange(fileId, 'date_created', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Location</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.location || ""}
-                          onChange={(e) => handleEditChange(fileId, 'location', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Event</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.event || ""}
-                          onChange={(e) => handleEditChange(fileId, 'event', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Category</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
-                          value={editValues[fileId]?.category || ""}
-                          onChange={(e) => handleEditChange(fileId, 'category', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button
-                        onClick={cancelEdit}
-                        className="px-3 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={(e) => saveEdit(fileId, e)}
-                        className="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Description first - full width and prominent */}
-                    {metadata?.description && (
-                      <div className="mb-4 pb-3 border-b border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-                        <p className="text-sm leading-relaxed font-medium">"{metadata.description}"</p>
-                      </div>
-                    )}
-                    
-                    {/* Other metadata in grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Subject</p>
-                        <p className="text-sm">{metadata?.subject || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Creator</p>
-                        <p className="text-sm">{metadata?.creator || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Date</p>
-                        <p className="text-sm">{metadata?.date_created || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Location</p>
-                        <p className="text-sm">{metadata?.location || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Event</p>
-                        <p className="text-sm">{metadata?.event || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Category</p>
-                        <p className="text-sm">{metadata?.category || "N/A"}</p>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+      
+      {/* Empty state */}
+      {results.length === 0 && (
+        <div className="flex flex-col items-center justify-center text-center py-12">
+          <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
+            <ImageIcon className="w-8 h-8 text-muted-foreground/60" />
           </div>
-        ))}
-      </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">No images to analyze</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Upload images to extract metadata using AI
+          </p>
+        </div>
+      )}
     </div>
   );
 };

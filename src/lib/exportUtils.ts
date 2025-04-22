@@ -1,4 +1,4 @@
-
+// Exports all metadata fields, including tags if present
 export const exportMetadataAsJson = (results: any[]) => {
   const exportData = results.map(({ fileName, metadata, status }) => ({
     fileName,

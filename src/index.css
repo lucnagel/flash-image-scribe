@@ -92,6 +92,39 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Enhance scrollbar for better wide screen experiences */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 20px;
+  }
+
+  /* Improve table readability on wider screens */
+  @media (min-width: 1536px) {
+    table {
+      font-size: 0.95rem;
+    }
+  }
+
+  @media (min-width: 2560px) {
+    table {
+      font-size: 1rem;
+    }
+  }
 }
 
 @layer components {
@@ -113,5 +146,62 @@
   
   .text-gradient {
     @apply bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent;
+  }
+  
+  /* Responsive container classes */
+  .container-fluid {
+    @apply w-full mx-auto;
+  }
+
+  /* Responsive table utilities */
+  .table-container {
+    @apply w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm;
+  }
+
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+  }
+  
+  /* Grid layouts for different screen sizes */
+  .adaptive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-7 gap-4;
+  }
+
+  /* Result card styling for mobile */
+  .result-card {
+    @apply border border-border rounded-lg overflow-hidden bg-card shadow-sm transition-all;
+  }
+
+  /* Animation for expanded content */
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+}
+
+/* Utility classes for ultra-wide screen adaptations */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .max-w-content {
+    max-width: min(100%, 1920px);
+  }
+
+  .max-w-ultra {
+    max-width: min(100%, 2560px);
+  }
+
+  /* Dynamic height utilities */
+  .h-dvh {
+    height: 100dvh;
+  }
+  
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+  
+  .max-h-dvh {
+    max-height: 100dvh;
   }
 }

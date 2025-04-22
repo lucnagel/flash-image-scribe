@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ImageUploader from "@/components/ImageUploader";
 import ResultTable from "@/components/ResultTable";
+import PrefillMetadataForm from "@/components/PrefillMetadataForm";
 import { analyzeImage } from "@/lib/gemini";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,15 +14,22 @@ type BatchResult = {
   fileDataUrl: string | null;
   metadata: {
     subject: string;
-    creator: string;
+    author: string;
     date_created: string;
     location: string;
     event: string;
     category: string;
     description: string;
+    tags: string; // Comma-separated tags
+    original_filename?: string;
+    keep_original_filename?: boolean;
+    filename_pattern?: string;
+    use_ai_analysis?: boolean;
   } | null;
   status: "analyzing" | "done" | "failed";
 };
+
+type PrefillMetadata = Partial<BatchResult['metadata']>;
 
 const Index = () => {
   const [results, setResults] = useState<BatchResult[]>([]);
@@ -30,54 +38,96 @@ const Index = () => {
   const [completedFiles, setCompletedFiles] = useState(0);
   const [analysisStart, setAnalysisStart] = useState<number | null>(null);
   const [analysisEnd, setAnalysisEnd] = useState<number | null>(null);
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const [prefillData, setPrefillData] = useState<PrefillMetadata>({
+    use_ai_analysis: true
+  });
+  const [prefillExpanded, setPrefillExpanded] = useState(false);
 
-  const fileToDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-  };
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const onFilesSelected = async (files: File[]) => {
-    if (!files.length) return;
-
+  const handleImagesSelected = async (files: File[], originalFilenames?: Record<string, string>) => {
+    if (loading || files.length === 0) return;
+    
     setLoading(true);
+    setAnalysisStart(Date.now());
     setTotalFiles(files.length);
     setCompletedFiles(0);
-    setAnalysisStart(Date.now());
-    setAnalysisEnd(null);
-
-    const dataUrls = await Promise.all(files.map((f) => fileToDataUrl(f)));
-
-    setResults(
-      files.map((file, i) => ({
-        fileId: `${file.name}_${file.size}_${Date.now()}`,
-        fileName: file.name,
-        fileDataUrl: dataUrls[i],
-        metadata: null,
-        status: "analyzing" as const,
+    
+    // Generate data URLs for previewing
+    const dataUrls = await Promise.all(
+      files.map(file => new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          resolve(dataUrl);
+        };
+        reader.readAsDataURL(file);
       }))
     );
+    
+    const newResults = files.map((file, i) => ({
+      fileId: `${file.name}_${file.size}_${Date.now()}`,
+      fileName: file.name,
+      fileDataUrl: dataUrls[i],
+      metadata: null,
+      status: "analyzing" as const,
+    }));
 
+    // Append new results to existing ones instead of replacing them
+    setResults(prevResults => [...prevResults, ...newResults]);
+
+    // Process each new file
     await Promise.all(
       files.map(async (file, idx) => {
         try {
-          const metadata = await analyzeImage(file);
-          setResults((prev) =>
-            prev.map((r, i) =>
-              i === idx ? { ...r, metadata, status: "done" } : r
-            )
-          );
+          // Merge prefill data with filename settings and always store original filename
+          const enhancedPrefillData = {
+            ...prefillData,
+            original_filename: file.name,
+            filename_pattern: "{subject}_{event}"
+          };
+          
+          // If AI analysis is disabled, we'll skip the API call and use only prefill data
+          let metadata;
+          if (prefillData.use_ai_analysis === false) {
+            metadata = {
+              ...enhancedPrefillData,
+              subject: enhancedPrefillData.subject || "",
+              author: enhancedPrefillData.author || "",
+              date_created: enhancedPrefillData.date_created || "",
+              location: enhancedPrefillData.location || "",
+              event: enhancedPrefillData.event || "",
+              category: enhancedPrefillData.category || "",
+              description: enhancedPrefillData.description || "",
+              tags: enhancedPrefillData.tags || "",
+              use_ai_analysis: false
+            };
+          } else {
+            metadata = await analyzeImage(file, enhancedPrefillData);
+            // Ensure we always store the original filename
+            if (metadata) {
+              metadata.original_filename = file.name;
+              metadata.use_ai_analysis = true;
+            }
+          }
+          
+          setResults((prev) => {
+            // Find the correct result to update (offset by the length of previous results)
+            const resultIndex = prev.length - files.length + idx;
+            return prev.map((r, i) =>
+              i === resultIndex ? { ...r, metadata, status: "done" } : r
+            );
+          });
           setCompletedFiles(prev => prev + 1);
         } catch (e: any) {
           console.error(`Error analyzing ${file.name}:`, e);
-          setResults((prev) =>
-            prev.map((r, i) =>
-              i === idx ? { ...r, metadata: null, status: "failed" } : r
-            )
-          );
+          setResults((prev) => {
+            // Find the correct result to update
+            const resultIndex = prev.length - files.length + idx;
+            return prev.map((r, i) =>
+              i === resultIndex ? { ...r, metadata: null, status: "failed" } : r
+            );
+          });
           setCompletedFiles(prev => prev + 1);
           toast.error(`Failed to analyze ${file.name}`);
         }
@@ -86,7 +136,7 @@ const Index = () => {
 
     setLoading(false);
     setAnalysisEnd(Date.now());
-    toast.success("Batch analysis complete!");
+    toast.success(`Completed analysis of ${files.length} image${files.length !== 1 ? 's' : ''}!`);
   };
 
   const handleUpdateMetadata = (updates: { fileId: string; metadata: BatchResult['metadata'] }[]) => {
@@ -191,23 +241,23 @@ const Index = () => {
 
       <main className="container flex-1 py-6 flex flex-col">
         {!hasResults ? (
-          <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center items-center">
+          <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col justify-center items-center">
             <div className="w-full space-y-8 animate-in">
-              <div className="space-y-4 text-center">
-                <h2 className="text-xl font-bold tracking-tighter text-gradient">
-                  Automated Image Metadata Extraction
-                </h2>
-                <p className="text-muted-foreground max-w-4xl mx-auto">
-                  Upload your images to automatically extract comprehensive metadata using AI.
-                </p>
-              </div>
               
-              <ImageUploader onFilesSelected={onFilesSelected} loading={loading} />
+              {/* Add PrefillMetadataForm component here */}
+              <PrefillMetadataForm 
+                prefillData={prefillData} 
+                setPrefillData={setPrefillData}
+                expanded={prefillExpanded}
+                setExpanded={setPrefillExpanded}
+              />
+              
+              <ImageUploader onFilesSelected={handleImagesSelected} loading={loading} />
               
               <div className="text-center pt-6">
                 <h3 className="font-medium mb-2">Extraction fields include:</h3>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {["Subject", "Creator", "Date", "Location", "Event", "Category", "Description"].map((field) => (
+                  {["Subject", "author", "Date", "Location", "Event", "Category", "Description", "Tags"].map((field) => (
                     <span key={field} className="px-2 py-1 bg-muted text-xs rounded-md">
                       {field}
                     </span>
@@ -218,76 +268,78 @@ const Index = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className={`grid gap-6 ${hasResults ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    {loading ? "Analyzing Images..." : "Analysis Results"}
-                  </h2>
+            {/* Always display the uploader at the top when results are showing */}
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <div className="mb-2">
+                    <h2 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+                      <Image className="w-5 h-5 text-muted-foreground" />
+                      Add more images
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Newly added images will be processed while preserving existing results
+                    </p>
+                  </div>
                   
-                  {!loading && (
-                    <div className="text-sm">
-                      <span className="text-green-500">{successCount}</span>
-                      <span className="text-muted-foreground"> successful</span>
-                      {failedCount > 0 && (
-                        <>
-                          <span className="mx-1 text-muted-foreground">•</span>
-                          <span className="text-destructive">{failedCount}</span>
-                          <span className="text-muted-foreground"> failed</span>
-                        </>
-                      )}
+                  {/* Add PrefillMetadataForm component here too */}
+                  <PrefillMetadataForm 
+                    prefillData={prefillData} 
+                    setPrefillData={setPrefillData}
+                    expanded={prefillExpanded}
+                    setExpanded={setPrefillExpanded}
+                  />
+                  
+                  {loading ? (
+                    <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <div className="animate-pulse flex flex-col items-center">
+                        <div className="h-2 w-32 bg-muted rounded-full mb-2"></div>
+                        <span className="text-sm text-muted-foreground">
+                          Processing {completedFiles} of {totalFiles} images...
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                      <div className="flex-1 w-full">
+                        <Button
+                          onClick={() => inputRef.current?.click()}
+                          variant="outline"
+                          className="w-full h-10 flex items-center justify-center gap-2"
+                        >
+                          <Image className="w-4 h-4" />
+                          Select Images
+                          <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+                        </Button>
+                        <input 
+                          ref={inputRef} 
+                          type="file" 
+                          accept="image/*" 
+                          multiple 
+                          onChange={(e) => {
+                            if (e.target.files?.length) {
+                              handleImagesSelected(Array.from(e.target.files));
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </div>
+                      <div className="text-center sm:text-left flex items-center text-sm text-muted-foreground">
+                        <span className="text-green-500 font-medium mr-1">{successCount}</span> successful
+                        {failedCount > 0 && (
+                          <>
+                            <span className="mx-1 text-muted-foreground">•</span>
+                            <span className="text-destructive font-medium mr-1">{failedCount}</span> failed
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-                
-                {!loading && (
-                  <p className="text-sm text-muted-foreground">
-                    {results.length} image{results.length !== 1 ? 's' : ''} processed. 
-                    {analysisStart && analysisEnd && (
-                      <span className="ml-2 text-green-600 font-semibold">
-                        (Completed in {((analysisEnd - analysisStart) / 1000).toFixed(2)}s)
-                      </span>
-                    )}
-                    Click to analyze more images.
-                  </p>
-                )}
               </div>
               
-              {/* Secondary uploader when results are already shown */}
-              {!loading && (
-                <div>
-                  <Button
-                    onClick={() => inputRef.current?.click()}
-                    variant="outline"
-                    className="w-full h-10 flex items-center justify-center gap-2"
-                  >
-                    <Image className="w-4 h-4" />
-                    Select More Images
-                    <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-                  </Button>
-                  <input 
-                    ref={inputRef} 
-                    type="file" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={(e) => {
-                      if (e.target.files?.length) {
-                        onFilesSelected(Array.from(e.target.files));
-                      }
-                    }}
-                    className="hidden"
-                  />
-                </div>
-              )}
-              
-              {hasResults && loading && (
-                <div className="text-sm text-muted-foreground animate-pulse">
-                  Processing {completedFiles} of {totalFiles} images...
-                </div>
-              )}
+              <ResultTable results={results} isLoading={loading} onUpdateMetadata={handleUpdateMetadata} />
             </div>
-            
-            <ResultTable results={results} isLoading={loading} onUpdateMetadata={handleUpdateMetadata} />
           </div>
         )}
       </main>

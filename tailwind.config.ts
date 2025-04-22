@@ -16,6 +16,8 @@ export default {
 				DEFAULT: '1rem',
 				sm: '2rem',
 				lg: '4rem',
+				xl: '5rem',
+				'2xl': '6rem',
 			},
 			screens: {
 				'sm': '640px',
@@ -23,9 +25,15 @@ export default {
 				'lg': '1024px',
 				'xl': '1280px',
 				'2xl': '1536px',
+				'3xl': '1920px',
+				'4xl': '2560px',
 			}
 		},
 		extend: {
+			screens: {
+				'3xl': '1920px',
+				'4xl': '2560px',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -75,6 +83,16 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			maxWidth: {
+				'8xl': '88rem',
+				'9xl': '96rem',
+			},
+			minHeight: {
+				'dynamic-screen': '100dvh',
+			},
+			height: {
+				'dynamic-screen': '100dvh',
 			},
 			keyframes: {
 				'accordion-down': {
