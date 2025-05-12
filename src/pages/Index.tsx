@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FileDown, Image, ArrowRight, Github } from "lucide-react";
 import { exportMetadataAsJson } from "@/lib/exportUtils";
-import { Badge } from "@/components/ui/badge"; // Added import for Badge
+import { Badge } from "@/components/ui/badge";
 
 type BatchResult = {
   fileId: string;
@@ -102,7 +102,6 @@ const Index = () => {
       return updatedResults;
     });
 
-    // Show a success toast
     toast.success(`Updated metadata for ${updates.length} ${updates.length === 1 ? 'image' : 'images'}`);
   };
   
@@ -128,10 +127,9 @@ const Index = () => {
   const failedCount = results.filter(r => r.status === "failed").length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background"> {/* Subtle gradient removed */}
-      {/* Fixed header with progress information */}
-      <header className={`sticky top-0 z-10 transition-all backdrop-blur-md ${hasResults ? 'border-b border-border/40' : ''}`}> {/* Enhanced glass effect */}
-        <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8"> {/* Adjusted padding */}
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className={`sticky top-0 z-10 transition-all backdrop-blur-md ${hasResults ? 'border-b border-border/40' : ''}`}>
+        <div className="container mx-auto py-4 px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-3">
             <div className="flex items-center gap-2.5">
               <div className="bg-primary/10 p-1.5 rounded-md">
@@ -139,7 +137,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-semibold tracking-tight">
-                  Flash Image Scribe
+                  AI Image Analysis
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   AI-powered image metadata extraction
@@ -172,40 +170,26 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto flex-1 py-8 flex flex-col px-4 sm:px-6 lg:px-8"> {/* Adjusted padding */}
+      <main className="container mx-auto flex-1 py-8 flex flex-col px-4">
         {!hasResults ? (
-          <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center items-center text-center"> {/* Centered and constrained width */}
-            <div className="w-full space-y-10 animate-in fade-in-50 duration-500"> {/* Adjusted spacing and animation */}
+          <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center items-center text-center">
+            <div className="w-full space-y-10">
               <div className="space-y-3">
-                <h2 className="text-2xl font-bold tracking-tight text-gradient sm:text-3xl"> {/* Enhanced title - adjusted size */}
+                <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                   Automated Image Metadata Assistance
                 </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto text-base"> {/* Adjusted text size */}
-                  Upload your images. AI will help extract 'Category' and 'Description'.
-                  You can manually edit these and add other details like 'Subject', 'Creator', 'Date', 'Location', and 'Event'.
-                </p>
               </div>
               
               <ImageUploader onFilesSelected={onFilesSelected} loading={loading} />
               
-              <div className="pt-4"> {/* Adjusted padding */}
-                <h3 className="font-medium mb-3 text-sm text-muted-foreground">Available metadata fields:</h3> {/* Subtle heading */}
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["Subject", "Creator", "Date", "Location", "Event", "Category", "Description"].map((field) => (
-                    <Badge key={field} variant="secondary" className="text-xs"> {/* Used Badge component */}
-                      {field}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-8"> {/* Increased spacing */}
-            <div className="grid gap-4 md:gap-6 grid-cols-1"> {/* Simplified grid for results header */}
-              <div className="space-y-1.5"> {/* Adjusted spacing */}
+          <div className="space-y-8">
+            <div className="grid gap-4 grid-cols-1">
+              <div className="space-y-1.5">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                  <h2 className="text-2xl font-semibold tracking-tight"> {/* Enhanced title */}
+                  <h2 className="text-2xl font-semibold tracking-tight">
                     {loading ? "Analyzing Images..." : "Analysis Results"}
                   </h2>
                   
@@ -230,18 +214,16 @@ const Index = () => {
                 )}
               </div>
               
-              {/* Secondary uploader when results are already shown */}
               {!loading && (
                 <div>
                   <Button
                     onClick={() => inputRef.current?.click()}
-                    variant="outline" // Kept outline for secondary action
-                    size="sm" // Standardized button size
-                    className="w-full md:w-auto flex items-center justify-center gap-2" // Responsive width, removed h-10
+                    variant="outline"
+                    size="sm"
+                    className="w-full md:w-auto flex items-center justify-center gap-2"
                   >
                     <Image className="w-4 h-4" />
                     Select More Images
-                    {/* <ArrowRight className="w-3.5 h-3.5 ml-auto md:ml-2" /> Removed arrow for cleaner look */}
                   </Button>
                   <input 
                     ref={inputRef} 
@@ -270,19 +252,11 @@ const Index = () => {
         )}
       </main>
       
-      <footer className="border-t border-border/40 py-5"> {/* Adjusted padding and border */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8"> {/* Consistent padding */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2"> {/* Adjusted gap */}
-            <p className="text-xs text-muted-foreground"> {/* Adjusted text size */}
-              Flash Image Scribe by Luc Nagel &copy; {new Date().getFullYear()}
-            </p>
-            {/* Optional: Add Github link or other links here if desired */}
-            {/* <Button variant="ghost" size="icon" asChild>
-              <a href="YOUR_GITHUB_REPO_LINK_HERE" target="_blank" rel="noopener noreferrer">
-                <Github className="h-4 w-4" />
-              </a>
-            </Button> */}
-          </div>
+      <footer className="border-t border-border/40 py-5">
+        <div className="container mx-auto px-4">
+          <p className="text-xs text-muted-foreground">
+            AI Image Analysis by Luc Nagel &copy; {new Date().getFullYear()}
+          </p>
         </div>
       </footer>
     </div>
