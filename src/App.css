@@ -1,7 +1,7 @@
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px; */ /* Removed max-width for full-width layout */
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */ /* Padding handled by individual page/component containers */
   text-align: center;
 }
 
@@ -33,9 +33,9 @@
   }
 }
 
-.card {
-  padding: 2em;
-}
+/* .card { */ /* Removed, card styling handled by Tailwind */
+  /* padding: 2em; */
+/* } */
 
 .read-the-docs {
   color: #888;

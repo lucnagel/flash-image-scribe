@@ -128,45 +128,43 @@ const Index = () => {
   const failedCount = results.filter(r => r.status === "failed").length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/50"> {/* Subtle gradient */}
+    <div className="min-h-screen flex flex-col bg-background"> {/* Subtle gradient removed */}
       {/* Fixed header with progress information */}
       <header className={`sticky top-0 z-10 transition-all backdrop-blur-md ${hasResults ? 'border-b border-border/40' : ''}`}> {/* Enhanced glass effect */}
         <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8"> {/* Adjusted padding */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2 rounded-lg"> {/* Changed icon background */}
-                <Image className="w-7 h-7 text-primary" /> {/* Changed icon color */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-primary/10 p-1.5 rounded-md">
+                <Image className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                  Flash Image Scribe {/* Updated App Name */}
+                <h1 className="text-xl font-semibold tracking-tight">
+                  Flash Image Scribe
                 </h1>
-                <p className="text-muted-foreground text-sm">
-                  AI-powered batch image metadata extraction
+                <p className="text-xs text-muted-foreground">
+                  AI-powered image metadata extraction
                 </p>
               </div>
             </div>
             
             {hasResults && (
-              <div className="flex flex-wrap gap-3 justify-end items-center">
-                {/* Removed inline progress bar for cleaner header when loading */}
-                <Button
-                  onClick={handleExport}
-                  disabled={loading || results.every(r => r.status !== "done")}
-                  className="h-9"
-                  variant="default" // Changed to default for primary action
-                >
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Export Metadata
-                </Button>
-              </div>
+              <Button
+                onClick={handleExport}
+                disabled={loading || results.every(r => r.status !== "done")}
+                variant="default"
+                size="sm"
+                className="w-full md:w-auto"
+              >
+                <FileDown className="h-4 w-4 mr-1" />
+                Export
+              </Button>
             )}
           </div>
           
           {hasResults && loading && (
-            <div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden"> {/* Adjusted progress bar style & margin */}
+            <div className="mt-2 h-1 w-full bg-muted/50 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-green-500 transition-all duration-300 ease-out" // Smoother transition
+                className="h-full bg-primary/70 transition-all duration-300 ease-out"
                 style={{ width: `${completionPercentage}%` }} 
               />
             </div>
@@ -179,7 +177,7 @@ const Index = () => {
           <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center items-center text-center"> {/* Centered and constrained width */}
             <div className="w-full space-y-10 animate-in fade-in-50 duration-500"> {/* Adjusted spacing and animation */}
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold tracking-tight text-gradient sm:text-4xl"> {/* Enhanced title */}
+                <h2 className="text-2xl font-bold tracking-tight text-gradient sm:text-3xl"> {/* Enhanced title - adjusted size */}
                   Automated Image Metadata Assistance
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto text-base"> {/* Adjusted text size */}
@@ -238,7 +236,8 @@ const Index = () => {
                   <Button
                     onClick={() => inputRef.current?.click()}
                     variant="outline" // Kept outline for secondary action
-                    className="w-full md:w-auto h-10 flex items-center justify-center gap-2" // Responsive width
+                    size="sm" // Standardized button size
+                    className="w-full md:w-auto flex items-center justify-center gap-2" // Responsive width, removed h-10
                   >
                     <Image className="w-4 h-4" />
                     Select More Images
