@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Image as ImageIcon, Check, X, Loader, ChevronDown, ChevronUp, Edit, Save, Square, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type Result = {
   fileId: string;
@@ -198,19 +203,20 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
         <div className="mb-4 p-3 bg-muted rounded-lg flex flex-wrap items-center justify-between gap-2 animate-in fade-in">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{selectedCount} item{selectedCount !== 1 ? 's' : ''} selected</span>
-            <button 
+            <Button 
               onClick={() => setSelectedRows({})} 
-              className="text-xs text-muted-foreground hover:text-foreground underline"
+              variant="link"
+              className="text-xs h-auto p-0"
             >
               Clear
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
             onClick={startBatchEdit}
-            className="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+            size="sm"
           >
             Edit Selected
-          </button>
+          </Button>
         </div>
       )}
 
@@ -219,27 +225,21 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
         <div className="mb-4 p-4 border border-border rounded-lg bg-card shadow-sm animate-in fade-in">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Batch Edit {selectedCount} item{selectedCount !== 1 ? 's' : ''}</h3>
-            <div className="text-sm text-muted-foreground">
-              Select fields to update
-            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <Checkbox
                   id="batch-subject" 
                   checked={batchFieldsToUpdate.subject} 
-                  onChange={() => toggleBatchField('subject')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  onCheckedChange={() => toggleBatchField('subject')}
                 />
-                <label htmlFor="batch-subject" className="text-sm font-medium">Subject</label>
+                <Label htmlFor="batch-subject" className="text-sm font-medium">Subject</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.subject}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.subject}
                 onChange={(e) => handleBatchEditChange('subject', e.target.value)}
                 placeholder="Subject"
@@ -248,19 +248,16 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <Checkbox
                   id="batch-creator" 
                   checked={batchFieldsToUpdate.creator} 
-                  onChange={() => toggleBatchField('creator')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  onCheckedChange={() => toggleBatchField('creator')}
                 />
-                <label htmlFor="batch-creator" className="text-sm font-medium">Creator</label>
+                <Label htmlFor="batch-creator" className="text-sm font-medium">Creator</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.creator}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.creator}
                 onChange={(e) => handleBatchEditChange('creator', e.target.value)}
                 placeholder="Creator"
@@ -269,19 +266,16 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <Checkbox
                   id="batch-date" 
                   checked={batchFieldsToUpdate.date_created} 
-                  onChange={() => toggleBatchField('date_created')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  onCheckedChange={() => toggleBatchField('date_created')}
                 />
-                <label htmlFor="batch-date" className="text-sm font-medium">Date</label>
+                <Label htmlFor="batch-date" className="text-sm font-medium">Date</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.date_created}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.date_created}
                 onChange={(e) => handleBatchEditChange('date_created', e.target.value)}
                 placeholder="YYYY-MM-DD"
@@ -290,19 +284,16 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <Checkbox
                   id="batch-location" 
                   checked={batchFieldsToUpdate.location} 
-                  onChange={() => toggleBatchField('location')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  onCheckedChange={() => toggleBatchField('location')}
                 />
-                <label htmlFor="batch-location" className="text-sm font-medium">Location</label>
+                <Label htmlFor="batch-location" className="text-sm font-medium">Location</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.location}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.location}
                 onChange={(e) => handleBatchEditChange('location', e.target.value)}
                 placeholder="Location"
@@ -311,19 +302,16 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <Checkbox
                   id="batch-event" 
                   checked={batchFieldsToUpdate.event} 
-                  onChange={() => toggleBatchField('event')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  onCheckedChange={() => toggleBatchField('event')}
                 />
-                <label htmlFor="batch-event" className="text-sm font-medium">Event</label>
+                <Label htmlFor="batch-event" className="text-sm font-medium">Event</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.event}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.event}
                 onChange={(e) => handleBatchEditChange('event', e.target.value)}
                 placeholder="Event"
@@ -332,19 +320,16 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  id="batch-category" 
-                  checked={batchFieldsToUpdate.category} 
-                  onChange={() => toggleBatchField('category')}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                <Checkbox
+                  id="batch-category"
+                  checked={batchFieldsToUpdate.category}
+                  onCheckedChange={() => toggleBatchField('category')}
                 />
-                <label htmlFor="batch-category" className="text-sm font-medium">Category</label>
+                <Label htmlFor="batch-category" className="text-sm font-medium">Category</Label>
               </div>
-              <input
+              <Input
                 type="text"
                 disabled={!batchFieldsToUpdate.category}
-                className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50"
                 value={batchEditValues.category}
                 onChange={(e) => handleBatchEditChange('category', e.target.value)}
                 placeholder="Category"
@@ -354,38 +339,35 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
 
           <div className="space-y-2 mb-6">
             <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
+              <Checkbox
                 id="batch-description" 
                 checked={batchFieldsToUpdate.description} 
-                onChange={() => toggleBatchField('description')}
-                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                onCheckedChange={() => toggleBatchField('description')}
               />
-              <label htmlFor="batch-description" className="text-sm font-medium">Description</label>
+              <Label htmlFor="batch-description" className="text-sm font-medium">Description</Label>
             </div>
-            <textarea
+            <Textarea
               disabled={!batchFieldsToUpdate.description}
-              className="w-full px-3 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50 min-h-[80px]"
               value={batchEditValues.description}
               onChange={(e) => handleBatchEditChange('description', e.target.value)}
               placeholder="Description"
+              className="min-h-[80px]"
             />
           </div>
 
           <div className="flex justify-end gap-3">
-            <button
+            <Button
               onClick={cancelBatchEdit}
-              className="px-4 py-2 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
+              variant="outline"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={saveBatchEdit}
               disabled={!Object.values(batchFieldsToUpdate).some(Boolean)}
-              className="px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             >
               Apply to Selected
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -397,16 +379,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="w-10 px-4 py-3">
-                  <div 
-                    className="cursor-pointer flex items-center justify-center"
-                    onClick={toggleSelectAll}
-                  >
-                    {allSelected ? (
-                      <CheckSquare className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <Square className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
+                  <Checkbox
+                    aria-label="Select all rows"
+                    checked={allSelected} 
+                    onCheckedChange={toggleSelectAll}
+                  />
                 </th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Image</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">File</th>
@@ -414,6 +391,8 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Creator</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Date</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Location</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Event</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Category</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left w-1/4">Description</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Status</th>
                 <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">Actions</th>
@@ -431,16 +410,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                 >
                   <td className="w-10 px-4 py-3">
                     {status === "done" && (
-                      <div 
-                        className="cursor-pointer flex items-center justify-center"
-                        onClick={(e) => toggleSelect(fileId, e)}
-                      >
-                        {selectedRows[fileId] ? (
-                          <CheckSquare className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Square className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
+                      <Checkbox
+                        aria-label={`Select row ${fileName}`}
+                        checked={selectedRows[fileId]} 
+                        onCheckedChange={(e) => toggleSelect(fileId, e as unknown as React.MouseEvent)}
+                      />
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -468,11 +442,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {editingRow === fileId ? (
-                      <input
+                      <Input
                         type="text"
-                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                         value={editValues[fileId]?.subject || ""}
                         onChange={(e) => handleEditChange(fileId, 'subject', e.target.value)}
+                        className="h-8"
                       />
                     ) : metadata?.subject || (
                       status === "analyzing" ? (
@@ -484,11 +458,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {editingRow === fileId ? (
-                      <input
+                      <Input
                         type="text"
-                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                         value={editValues[fileId]?.creator || ""}
                         onChange={(e) => handleEditChange(fileId, 'creator', e.target.value)}
+                        className="h-8"
                       />
                     ) : metadata?.creator || (
                       status === "analyzing" ? (
@@ -500,11 +474,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {editingRow === fileId ? (
-                      <input
+                      <Input
                         type="text"
-                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                         value={editValues[fileId]?.date_created || ""}
                         onChange={(e) => handleEditChange(fileId, 'date_created', e.target.value)}
+                        className="h-8"
                       />
                     ) : metadata?.date_created || (
                       status === "analyzing" ? (
@@ -516,11 +490,11 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {editingRow === fileId ? (
-                      <input
+                      <Input
                         type="text"
-                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                         value={editValues[fileId]?.location || ""}
                         onChange={(e) => handleEditChange(fileId, 'location', e.target.value)}
+                        className="h-8"
                       />
                     ) : metadata?.location || (
                       status === "analyzing" ? (
@@ -530,16 +504,48 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                       )
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm max-w-xs">
+                  <td className="px-4 py-3 text-sm">
                     {editingRow === fileId ? (
-                      <textarea
-                        className="w-full px-2 py-1 rounded border border-primary/30 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      <Input
+                        type="text"
+                        value={editValues[fileId]?.event || ""}
+                        onChange={(e) => handleEditChange(fileId, 'event', e.target.value)}
+                        className="h-8"
+                      />
+                    ) : metadata?.event || (
+                      status === "analyzing" ? (
+                        <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
+                      ) : (
+                        <span className="text-muted-foreground italic">N/A</span>
+                      )
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {editingRow === fileId ? (
+                      <Input
+                        type="text"
+                        value={editValues[fileId]?.category || ""}
+                        onChange={(e) => handleEditChange(fileId, 'category', e.target.value)}
+                        className="h-8"
+                      />
+                    ) : metadata?.category || (
+                      status === "analyzing" ? (
+                        <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
+                      ) : (
+                        <span className="text-muted-foreground italic">N/A</span>
+                      )
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {editingRow === fileId ? (
+                      <Textarea
                         value={editValues[fileId]?.description || ""}
                         onChange={(e) => handleEditChange(fileId, 'description', e.target.value)}
                         rows={2}
+                        className="min-w-[200px]"
                       />
                     ) : metadata?.description ? (
-                      <div className="line-clamp-2 text-sm font-medium" title={metadata.description}>
+                      <div className="text-sm font-medium" title={metadata.description}>
                         {metadata.description}
                       </div>
                     ) : status === "analyzing" ? (
@@ -568,29 +574,32 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                       <>
                         {editingRow === fileId ? (
                           <div className="flex gap-2">
-                            <button 
+                            <Button
                               onClick={(e) => saveEdit(fileId, e)}
-                              className="p-1.5 rounded-md bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors"
+                              variant="ghost"
+                              size="icon"
                               title="Save"
                             >
-                              <Save className="w-4 h-4" />
-                            </button>
-                            <button 
+                              <Save className="w-4 h-4 text-green-500" />
+                            </Button>
+                            <Button
                               onClick={cancelEdit}
-                              className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                              variant="ghost"
+                              size="icon"
                               title="Cancel"
                             >
                               <X className="w-4 h-4" />
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <button 
+                          <Button
                             onClick={(e) => startEdit(fileId, e)}
-                            className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                            variant="ghost"
+                            size="icon"
                             title="Edit metadata"
                           >
                             <Edit className="w-4 h-4 text-muted-foreground" />
-                          </button>
+                          </Button>
                         )}
                       </>
                     )}
@@ -616,16 +625,12 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
           >
             <div className="flex items-center gap-3 p-3">
               {status === "done" && (
-                <div 
-                  className="cursor-pointer"
-                  onClick={(e) => toggleSelect(fileId, e)}
-                >
-                  {selectedRows[fileId] ? (
-                    <CheckSquare className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <Square className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </div>
+                <Checkbox
+                  aria-label={`Select card ${fileName}`}
+                  checked={selectedRows[fileId]} 
+                  onCheckedChange={(e) => toggleSelect(fileId, e as unknown as React.MouseEvent)}
+                  className="mr-1"
+                />
               )}
               
               <div 
@@ -660,7 +665,7 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                   
                   <p className="text-xs text-muted-foreground">
                     {status === "done" 
-                      ? `${metadata?.subject || 'Untitled'} • ${metadata?.creator || 'Unknown'}`
+                      ? `${metadata?.subject || 'Untitled'} • ${metadata?.creator || 'Unknown'} • ${metadata?.category || 'N/A'}`
                       : status === "analyzing" 
                         ? "Analyzing metadata..."
                         : "Analysis failed"
@@ -684,7 +689,7 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
               
               {/* Edit button for mobile */}
               {status === "done" && (
-                <button 
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     if (editingRow === fileId) {
@@ -693,15 +698,17 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                       startEdit(fileId, e);
                     }
                   }}
-                  className="p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                  variant="ghost"
+                  size="icon"
                   title={editingRow === fileId ? "Save" : "Edit metadata"}
+                  className="ml-auto flex-shrink-0"
                 >
                   {editingRow === fileId ? (
                     <Save className="w-4 h-4 text-green-500" />
                   ) : (
                     <Edit className="w-4 h-4 text-muted-foreground" />
                   )}
-                </button>
+                </Button>
               )}
             </div>
             
@@ -711,9 +718,8 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                 {editingRow === fileId ? (
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Description</label>
-                      <textarea
-                        className="w-full px-3 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
+                      <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+                      <Textarea
                         value={editValues[fileId]?.description || ""}
                         onChange={(e) => handleEditChange(fileId, 'description', e.target.value)}
                         rows={3}
@@ -722,55 +728,49 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                     
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Subject</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Subject</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.subject || ""}
                           onChange={(e) => handleEditChange(fileId, 'subject', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Creator</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Creator</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.creator || ""}
                           onChange={(e) => handleEditChange(fileId, 'creator', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Date</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Date</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.date_created || ""}
                           onChange={(e) => handleEditChange(fileId, 'date_created', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Location</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Location</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.location || ""}
                           onChange={(e) => handleEditChange(fileId, 'location', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Event</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Event</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.event || ""}
                           onChange={(e) => handleEditChange(fileId, 'event', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Category</label>
-                        <input
+                        <Label className="text-xs font-medium text-muted-foreground">Category</Label>
+                        <Input
                           type="text"
-                          className="w-full px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-green-500"
                           value={editValues[fileId]?.category || ""}
                           onChange={(e) => handleEditChange(fileId, 'category', e.target.value)}
                         />
@@ -778,18 +778,17 @@ const ResultTable: React.FC<Props> = ({ results, isLoading, onUpdateMetadata }) 
                     </div>
                     
                     <div className="flex justify-end gap-3 pt-2">
-                      <button
+                      <Button
                         onClick={cancelEdit}
-                        className="px-3 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors"
+                        variant="outline"
                       >
                         Cancel
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={(e) => saveEdit(fileId, e)}
-                        className="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
                       >
                         Save Changes
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (

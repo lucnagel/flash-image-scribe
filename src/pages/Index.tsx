@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FileDown, Image, ArrowRight, Github } from "lucide-react";
 import { exportMetadataAsJson } from "@/lib/exportUtils";
+import { Badge } from "@/components/ui/badge"; // Added import for Badge
 
 type BatchResult = {
   fileId: string;
@@ -127,18 +128,18 @@ const Index = () => {
   const failedCount = results.filter(r => r.status === "failed").length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/50"> {/* Subtle gradient */}
       {/* Fixed header with progress information */}
-      <header className={`sticky top-0 z-10 transition-all ${hasResults ? 'glass-effect' : 'bg-transparent'}`}>
-        <div className="container py-5">
+      <header className={`sticky top-0 z-10 transition-all backdrop-blur-md ${hasResults ? 'border-b border-border/40' : ''}`}> {/* Enhanced glass effect */}
+        <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8"> {/* Adjusted padding */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-gray-700/20 p-2 rounded-lg">
-                <Image className="w-7 h-7 text-gray-300" />
+              <div className="bg-primary/10 p-2 rounded-lg"> {/* Changed icon background */}
+                <Image className="w-7 h-7 text-primary" /> {/* Changed icon color */}
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                  Image Analysis
+                  Flash Image Scribe {/* Updated App Name */}
                 </h1>
                 <p className="text-muted-foreground text-sm">
                   AI-powered batch image metadata extraction
@@ -148,23 +149,12 @@ const Index = () => {
             
             {hasResults && (
               <div className="flex flex-wrap gap-3 justify-end items-center">
-                {loading && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-24 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-500 transition-all duration-500" 
-                        style={{ width: `${completionPercentage}%` }} 
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground">{completionPercentage}%</span>
-                  </div>
-                )}
-                
+                {/* Removed inline progress bar for cleaner header when loading */}
                 <Button
                   onClick={handleExport}
                   disabled={loading || results.every(r => r.status !== "done")}
                   className="h-9"
-                  variant="outline"
+                  variant="default" // Changed to default for primary action
                 >
                   <FileDown className="mr-2 h-4 w-4" />
                   Export Metadata
@@ -174,9 +164,9 @@ const Index = () => {
           </div>
           
           {hasResults && loading && (
-            <div className="h-1 w-full bg-muted mt-5 rounded-full overflow-hidden">
+            <div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden"> {/* Adjusted progress bar style & margin */}
               <div 
-                className="h-full bg-green-500 transition-all duration-500" 
+                className="h-full bg-green-500 transition-all duration-300 ease-out" // Smoother transition
                 style={{ width: `${completionPercentage}%` }} 
               />
             </div>
@@ -184,15 +174,15 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container flex-1 py-6 flex flex-col">
+      <main className="container mx-auto flex-1 py-8 flex flex-col px-4 sm:px-6 lg:px-8"> {/* Adjusted padding */}
         {!hasResults ? (
-          <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center items-center">
-            <div className="w-full space-y-8 animate-in">
-              <div className="space-y-4 text-center">
-                <h2 className="text-xl font-bold tracking-tighter text-gradient">
+          <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center items-center text-center"> {/* Centered and constrained width */}
+            <div className="w-full space-y-10 animate-in fade-in-50 duration-500"> {/* Adjusted spacing and animation */}
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold tracking-tight text-gradient sm:text-4xl"> {/* Enhanced title */}
                   Automated Image Metadata Assistance
                 </h2>
-                <p className="text-muted-foreground max-w-4xl mx-auto">
+                <p className="text-muted-foreground max-w-2xl mx-auto text-base"> {/* Adjusted text size */}
                   Upload your images. AI will help extract 'Category' and 'Description'.
                   You can manually edit these and add other details like 'Subject', 'Creator', 'Date', 'Location', and 'Event'.
                 </p>
@@ -200,46 +190,44 @@ const Index = () => {
               
               <ImageUploader onFilesSelected={onFilesSelected} loading={loading} />
               
-              <div className="text-center pt-6">
-                <h3 className="font-medium mb-2">Available metadata fields:</h3>
+              <div className="pt-4"> {/* Adjusted padding */}
+                <h3 className="font-medium mb-3 text-sm text-muted-foreground">Available metadata fields:</h3> {/* Subtle heading */}
                 <div className="flex flex-wrap justify-center gap-2">
                   {["Subject", "Creator", "Date", "Location", "Event", "Category", "Description"].map((field) => (
-                    <span key={field} className="px-2 py-1 bg-muted text-xs rounded-md">
+                    <Badge key={field} variant="secondary" className="text-xs"> {/* Used Badge component */}
                       {field}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className={`grid gap-6 ${hasResults ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold tracking-tight">
+          <div className="space-y-8"> {/* Increased spacing */}
+            <div className="grid gap-4 md:gap-6 grid-cols-1"> {/* Simplified grid for results header */}
+              <div className="space-y-1.5"> {/* Adjusted spacing */}
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                  <h2 className="text-2xl font-semibold tracking-tight"> {/* Enhanced title */}
                     {loading ? "Analyzing Images..." : "Analysis Results"}
                   </h2>
                   
                   {!loading && (
-                    <div className="text-sm">
-                      <span className="text-green-500">{successCount}</span>
-                      <span className="text-muted-foreground"> successful</span>
+                    <div className="text-sm flex items-center gap-x-2">
+                      <span className="text-green-600 font-medium">{successCount} successful</span>
                       {failedCount > 0 && (
                         <>
-                          <span className="mx-1 text-muted-foreground">•</span>
-                          <span className="text-destructive">{failedCount}</span>
-                          <span className="text-muted-foreground"> failed</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-destructive font-medium">{failedCount} failed</span>
                         </>
                       )}
+                       <span className="text-muted-foreground">• {results.length} total</span>
                     </div>
                   )}
                 </div>
                 
                 {!loading && (
                   <p className="text-sm text-muted-foreground">
-                    {results.length} image{results.length !== 1 ? 's' : ''} processed. 
-                    Click to analyze more images.
+                    {results.length} image{results.length !== 1 ? 's' : ''} processed.
                   </p>
                 )}
               </div>
@@ -249,12 +237,12 @@ const Index = () => {
                 <div>
                   <Button
                     onClick={() => inputRef.current?.click()}
-                    variant="outline"
-                    className="w-full h-10 flex items-center justify-center gap-2"
+                    variant="outline" // Kept outline for secondary action
+                    className="w-full md:w-auto h-10 flex items-center justify-center gap-2" // Responsive width
                   >
                     <Image className="w-4 h-4" />
                     Select More Images
-                    <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+                    {/* <ArrowRight className="w-3.5 h-3.5 ml-auto md:ml-2" /> Removed arrow for cleaner look */}
                   </Button>
                   <input 
                     ref={inputRef} 
@@ -283,12 +271,18 @@ const Index = () => {
         )}
       </main>
       
-      <footer className="border-t border-border py-4">
-        <div className="container">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
+      <footer className="border-t border-border/40 py-5"> {/* Adjusted padding and border */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8"> {/* Consistent padding */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2"> {/* Adjusted gap */}
+            <p className="text-xs text-muted-foreground"> {/* Adjusted text size */}
               Flash Image Scribe by Luc Nagel &copy; {new Date().getFullYear()}
             </p>
+            {/* Optional: Add Github link or other links here if desired */}
+            {/* <Button variant="ghost" size="icon" asChild>
+              <a href="YOUR_GITHUB_REPO_LINK_HERE" target="_blank" rel="noopener noreferrer">
+                <Github className="h-4 w-4" />
+              </a>
+            </Button> */}
           </div>
         </div>
       </footer>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"; // Added Button import
 
 type Props = {
   onFilesSelected: (files: File[]) => void;
@@ -117,8 +118,8 @@ const ImageUploader: React.FC<Props> = ({ onFilesSelected, loading }) => {
             {loading ? "Analyzing Images..." : "Drop images here or click to upload"}
           </h3>
           
-          <p className="text-muted-foreground text-sm max-w-xs text-center mt-2">
-            Selected images will be automatically analyzed to extract metadata for archival purposes
+          <p className="text-muted-foreground text-sm max-w-xs text-center mt-1"> {/* Simplified text and reduced margin */}
+            Upload images for AI-powered metadata extraction. (Max 15 per batch)
           </p>
           
           <input
@@ -131,18 +132,15 @@ const ImageUploader: React.FC<Props> = ({ onFilesSelected, loading }) => {
             className="hidden"
           />
           
-          <button
+          <Button // Changed to Button component
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={loading}
-            className={cn(
-              "mt-4 px-5 py-2 rounded-lg font-medium transition-all",
-              "bg-gray-600 text-gray-50 shadow hover:opacity-90",
-              loading && "animate-pulse"
-            )}
+            className={cn("mt-4", loading && "animate-pulse")}
+            variant="default" // Using default variant
           >
             {loading ? "Processing..." : "Select Images"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
