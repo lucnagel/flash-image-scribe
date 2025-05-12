@@ -190,17 +190,18 @@ const Index = () => {
             <div className="w-full space-y-8 animate-in">
               <div className="space-y-4 text-center">
                 <h2 className="text-xl font-bold tracking-tighter text-gradient">
-                  Automated Image Metadata Extraction
+                  Automated Image Metadata Assistance
                 </h2>
                 <p className="text-muted-foreground max-w-4xl mx-auto">
-                  Upload your images to automatically extract comprehensive metadata using AI.
+                  Upload your images. AI will help extract 'Category' and 'Description'.
+                  You can manually edit these and add other details like 'Subject', 'Creator', 'Date', 'Location', and 'Event'.
                 </p>
               </div>
               
               <ImageUploader onFilesSelected={onFilesSelected} loading={loading} />
               
               <div className="text-center pt-6">
-                <h3 className="font-medium mb-2">Extraction fields include:</h3>
+                <h3 className="font-medium mb-2">Available metadata fields:</h3>
                 <div className="flex flex-wrap justify-center gap-2">
                   {["Subject", "Creator", "Date", "Location", "Event", "Category", "Description"].map((field) => (
                     <span key={field} className="px-2 py-1 bg-muted text-xs rounded-md">

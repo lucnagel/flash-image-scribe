@@ -37,14 +37,14 @@ export async function analyzeImage(file: File): Promise<MetadataResponse | null>
   // Prompt Gemini for metadata extraction
   const prompt = `
 You are a digital archivist working for Dekmantel. Analyze the attached image file and extract the following metadata as accurately as possible. Output your answer ONLY as a JSON object with these keys:
-"subject", "creator", "date_created", "location", "event", "category", "description".
+"category", "description".
 
 The file name is: "${fileName}" - use this for additional context if it contains information like event name, artist/DJ, photographer name, or date.
 
-If any field is unknown, use an empty string. Keep the subject and description short and concise yet specific.
+If any field is unknown, use an empty string. Keep the description short and concise yet specific.
 
 Example:
-{"subject":"Jeff Mills","creator":"","date_created":"2023-05-06","location":"Croatia","event":"Selectors Festival","category":"Event Photography","description":"Jeff Mills stands behind two turntables inside a booth surrounded by trees and dancers."}
+{"category":"Event Photography","description":"Jeff Mills stands behind two turntables inside a booth surrounded by trees and dancers."}
 
 Give no explanation or commentary, ONLY valid compact JSON.
 `;
@@ -91,15 +91,68 @@ Give no explanation or commentary, ONLY valid compact JSON.
     
     // Extract JSON object from Gemini's text reply
     try {
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      console.log("Raw text from Gemini:", text);
-      const jsonText = text.match(/\{[\s\S]*\}/)?.[0]; // Find first {...}
-      if (!jsonText) return null;
-      // Remove any trailing commas, just in case
-      const clean = jsonText.replace(/,\s*\}/g, "}").replace(/,\s*\]/g, "]");
-      return JSON.parse(clean) as MetadataResponse;
-    } catch (e) {
-      console.error("Error parsing Gemini response:", e);
+      const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      console.log("Raw text from Gemini:", textResponse);
+
+      let jsonString = null;
+      // Try to extract JSON from markdown code block first
+      const markdownMatch = textResponse.match(/```json\s*([\s\S]*?)\s*```/);
+      if (markdownMatch && markdownMatch[1]) {
+        jsonString = markdownMatch[1];
+      } else {
+        // Fallback to finding the first occurrence of a JSON object
+        const plainJsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        if (plainJsonMatch && plainJsonMatch[0]) {
+          jsonString = plainJsonMatch[0];
+        }
+      }
+
+      if (!jsonString) {
+        console.error("No JSON object found in Gemini response text.");
+        return null;
+      }
+
+      // Clean the extracted JSON string (trim whitespace)
+      const cleanedJsonString = jsonString.trim();
+      
+      let parsedObject: any;
+      try {
+        parsedObject = JSON.parse(cleanedJsonString);
+      } catch (parseError) {
+        console.error("Error parsing JSON from Gemini:", parseError, "Attempted to parse:", cleanedJsonString);
+        return null;
+      }
+
+      // Ensure the parsed object is a valid object and not an array or primitive
+      if (typeof parsedObject !== 'object' || parsedObject === null || Array.isArray(parsedObject)) {
+        console.error("Parsed JSON is not a valid object for metadata. Parsed value:", parsedObject);
+        return null;
+      }
+
+      const metadataKeys: (keyof MetadataResponse)[] = [
+        "subject", "creator", "date_created", "location", 
+        "event", "category", "description"
+      ];
+      const sanitizedMetadata: Partial<MetadataResponse> = {};
+
+      for (const key of metadataKeys) {
+        const value = parsedObject[key];
+        if (typeof value === 'string') {
+          sanitizedMetadata[key] = value;
+        } else if (value === null || value === undefined) {
+          // Adhere to prompt's request for empty string for unknowns
+          sanitizedMetadata[key] = ""; 
+        } else {
+          // If Gemini returned a non-string/non-null type, convert to string and log
+          console.warn(`Gemini returned a non-string value for '${key}': ${JSON.stringify(value)}. Converting to string.`);
+          sanitizedMetadata[key] = String(value);
+        }
+      }
+      
+      return sanitizedMetadata as MetadataResponse;
+
+    } catch (e) { // This outer catch is for unexpected errors during the processing logic itself
+      console.error("Error processing Gemini response structure:", e);
       return null;
     }
   } catch (e) {
