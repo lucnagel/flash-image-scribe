@@ -129,27 +129,40 @@ Give no explanation or commentary, ONLY valid compact JSON.
         return null;
       }
 
-      const metadataKeys: (keyof MetadataResponse)[] = [
-        "subject", "creator", "date_created", "location", 
-        "event", "category", "description"
-      ];
-      const sanitizedMetadata: Partial<MetadataResponse> = {};
+      // Refactored logic to build MetadataResponse:
+      // Initialize the full metadata structure with default empty strings.
+      // Category and description will be populated from the API response.
+      // Other fields (subject, creator, date_created, location, event)
+      // are initialized as empty strings for manual input later.
+      const metadata: MetadataResponse = {
+        subject: "",
+        creator: "",
+        date_created: "",
+        location: "",
+        event: "",
+        category: "", // Default, will be overridden if API provides 'category'
+        description: "" // Default, will be overridden if API provides 'description'
+      };
 
-      for (const key of metadataKeys) {
-        const value = parsedObject[key];
-        if (typeof value === 'string') {
-          sanitizedMetadata[key] = value;
-        } else if (value === null || value === undefined) {
-          // Adhere to prompt's request for empty string for unknowns
-          sanitizedMetadata[key] = ""; 
-        } else {
-          // If Gemini returned a non-string/non-null type, convert to string and log
-          console.warn(`Gemini returned a non-string value for '${key}': ${JSON.stringify(value)}. Converting to string.`);
-          sanitizedMetadata[key] = String(value);
-        }
-      }
+      // Populate 'category' from parsedObject if available and valid
+      const apiCategory = parsedObject.category;
+      if (typeof apiCategory === 'string') {
+        metadata.category = apiCategory;
+      } else if (apiCategory !== undefined && apiCategory !== null) {
+        console.warn(`Gemini returned a non-string value for 'category': ${JSON.stringify(apiCategory)}. Converting to string.`);
+        metadata.category = String(apiCategory);
+      } // If apiCategory is undefined, null, or not a string, metadata.category remains ""
+
+      // Populate 'description' from parsedObject if available and valid
+      const apiDescription = parsedObject.description;
+      if (typeof apiDescription === 'string') {
+        metadata.description = apiDescription;
+      } else if (apiDescription !== undefined && apiDescription !== null) {
+        console.warn(`Gemini returned a non-string value for 'description': ${JSON.stringify(apiDescription)}. Converting to string.`);
+        metadata.description = String(apiDescription);
+      } // If apiDescription is undefined, null, or not a string, metadata.description remains ""
       
-      return sanitizedMetadata as MetadataResponse;
+      return metadata;
 
     } catch (e) { // This outer catch is for unexpected errors during the processing logic itself
       console.error("Error processing Gemini response structure:", e);
